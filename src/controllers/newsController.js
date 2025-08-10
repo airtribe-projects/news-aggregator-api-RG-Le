@@ -5,35 +5,25 @@ dotenv.config();
 const APIKEY = process.env.GNEWS_API_KEY;
 const userModel = require('../models/userModel');
 
-const languageMap = {
-    'english': 'en',
-    'hindi': 'hi',
-    'french': 'fr',
-    'portuguese': 'pt',
-    'german': 'de',
-}
-
+// We can map languages, but the test cases do not specify this to be an object..
 const fetchNewsByPreferences = async (preferences) => {
     const articlesMap = new Map(); //To avoid duplicates
 
     try {
         const allRequests = []; // To hold all axios requests
-        for (const category of preferences.categories) {
-            for (const language of preferences.languages) {
-                const langCode = languageMap[language.toLowerCase()] || 'en'; // Default to English if language not found
-
-                const url = `https://gnews.io/api/v4/search?q=${encodeURIComponent(category)}&lang=${langCode}&token=${APIKEY}&max=1`;
-                console.log(`Fetching news for category: ${category}, language: ${language} from URL: ${url}`);
+        for (const category of preferences) {
+            
+            const url = `https://gnews.io/api/v4/search?q=${encodeURIComponent(category)}&lang=en&token=${APIKEY}&max=3`;
+            console.log(`Fetching news for category: ${category}, language: English from URL: ${url}`);
                 
-                // Push the axios request to the array
-                allRequests.push(
-                    axios.get(url)
-                    .catch(error => {
-                        console.log(`Error fetching news for category: ${category}, language: ${language}`);
-                        return { data: { articles: [] }}
-                    })
-                );
-            }
+            // Push the axios request to the array
+            allRequests.push(
+                axios.get(url)
+                .catch(error => {
+                    console.log(`Error fetching news for category: ${category}, language: English`);
+                    return { data: { articles: [] }}
+                })
+            );
         }
 
         // Wait for all requests to complete
@@ -80,36 +70,31 @@ const fetchTopNews = async () => {
 
 const newsController = (req, res) => {
     // Getting the Username
-    const username = req.user.username; // set by auth middleware
-    console.log('Fetching news for user:', username);
+    const email = req.user.email; // set by auth middleware
+    console.log('Fetching news for user:', email);
 
     // Get the user preferences
-    const userPreferences = userModel.getUserPreferences(username);
+    const userPreferences = userModel.getUserPreferences(email);
     console.log('User Preferences:', userPreferences);
 
     if (
-        !userPreferences ||
-        !Array.isArray(userPreferences.preferences.categories) ||
-        !Array.isArray(userPreferences.preferences.languages)
+        !userPreferences.preferences ||
+        !Array.isArray(userPreferences.preferences)
     ) {
-        console.log('Invalid preferences structure:', typeof(userPreferences.preferences.categories));
+        console.log('Invalid preferences structure:', typeof(userPreferences.preferences));
         throw new Error('Invalid preferences structure');
     }
 
     // Fetch news based on user preferences
     try {
-        if (
-            !userPreferences.preferences || 
-            !userPreferences.preferences.categories.length ||
-            !userPreferences.preferences.languages.length
-        ) {
+        if (!userPreferences.preferences.length) {
             // Fetch Top News if no preferences are set
             return fetchTopNews()
                 .then(articles => {
                     if (articles.length === 0) {
                         return res.status(404).json({ message: 'No top news articles found' });
                     }
-                    return res.status(200).json({ articles });
+                    return res.status(200).json({ message: "Successfully Fetched News Articles", news: articles });
                 })
                 .catch(error => {
                     console.error('Error fetching top news:', error);
@@ -123,7 +108,7 @@ const newsController = (req, res) => {
                 if (articles.length === 0) {
                     return res.status(404).json({ message: 'No news articles found based on user preferences' });
                 }
-                return res.status(200).json({ articles });
+                return res.status(200).json({ message: "Sucessfully Fetched News Articles based on User Preferences", news: articles });
             })
             .catch(error => {
                 console.error('Error fetching news:', error);

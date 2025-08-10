@@ -2,7 +2,8 @@ const path = require('path');
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const { writeJSONFileSync, readJSONFileSync } = require('../utils/file_utils');
-const { use } = require('react');
+const userSchema = require("../models/schema/userSchema");
+const UserSchema = require('../models/schema/userSchema');
 
 require('dotenv').config();
 
@@ -24,9 +25,9 @@ class UserModel {
     };
 
     // Method to find a user by username
-    static findUser(username) {
+    static findUser(email) {
         try {
-            if (!username) {
+            if (!email) {
                 throw new Error('Username is required');
             }
 
@@ -34,7 +35,7 @@ class UserModel {
             const users = this.readUsers();
 
             // Check if user exists
-            return users.find(u => u.username === username);
+            return users.find(u => u.email === email);
         } catch (error) {
             console.error('Error finding user:', error);
         }
@@ -43,16 +44,13 @@ class UserModel {
     // Method to Create a User
     async createUser(userData) {
         try{
-            console.log('Creating user:', userData.username);
             // Logic to create user in the database
-            
-            if (!userData || !userData.username || !userData.password) {
-                throw new Error('Invalid user data');   
-            }
+            console.log('Creating user:', userData.email);
             
             // Check if user already exists 
-            const existingUser = UserModel.findUser(userData.username);
+            const existingUser = UserModel.findUser(userData.email);
             if (existingUser) {
+                console.error('User with username already exists:', userData.name);
                 return {
                     message: 'User already exists',
                     status: 409
@@ -61,15 +59,30 @@ class UserModel {
 
             // Adding a new user
             const users = UserModel.readUsers();
-            let newUser = {
-                username: userData.username,
-                password: await bcrypt.hash(userData.password, 10), // Hashing the password
-                preferences: {}, // Default Empty Preferences
-                createdAt: new Date().toISOString(),
-            }
-            writeJSONFileSync(userDBPath, [...users, newUser]);
+            const hashedPassword = await bcrypt.hash(userData.password, 10) 
+            try {
+                const newUser = new UserSchema({
+                    username: userData.name,
+                    email: userData.email,
+                    password: hashedPassword,
+                    preferences: userData.preferences || [],
+                    createdAt: new Date().toISOString(),
+                    updatedAt: new Date().toISOString(),
+                });
+                // Write the new user to DB
+                writeJSONFileSync(userDBPath, [...users, newUser]);
+                
+                return {
+                    message: 'User created successfully',
+                    status: 200,
+                }
 
-            return { message: 'User created successfully' };
+            } catch (error) {
+                return {
+                    message: error.message,
+                    status: 400
+                }
+            }
         
         } catch (error) {
             console.log("Error creating user:", error);
@@ -81,16 +94,15 @@ class UserModel {
     // Method to Login and Verify a User
     async loginUser(userData) {
         try {
-            console.log('Logging in user: ', userData.username);
-
             // Check if valid user data is provided
-            if (!userData || !userData.username || !userData.password) {
+            if (!userData || !userData.email || !userData.password) {
                 throw new Error('Invalid User Data');
             }
 
             // Find If User Exists
-            const user = UserModel.findUser(userData.username);
+            const user = UserModel.findUser(userData.email);
             if (!user) {
+                console.log('No User Found with Username:', userData.username);
                 return {
                     message: 'User not found',
                     status: 404,
@@ -108,7 +120,7 @@ class UserModel {
 
             // Generate JWT Token
             const jwtSecret = process.env.JWT_SECRET || 'your_jwt_secret';
-            const token = jwt.sign({ username: user.username}, jwtSecret, { expiresIn: '1h' }); // TODO: Get the JWT Private Key from Environment Variables
+            const token = jwt.sign({ email: user.email}, jwtSecret, { expiresIn: '1h' }); 
             
             return {
                 message: 'User logged in successfully',
@@ -125,15 +137,15 @@ class UserModel {
     }
 
     // Method to Get User Preferences
-    getUserPreferences(username) {
+    getUserPreferences(email) {
         try {
-            console.log('Getting Preferences for user:', username);
-            if (!username) {
+            console.log('Getting Preferences for user:', email);
+            if (!email) {
                 throw new Error('No Username Found!!');
             }
 
             // Get User Details
-            const user = UserModel.findUser(username);
+            const user = UserModel.findUser(email);
             if (!user) {
                 return {
                     message: 'User not found',
@@ -143,16 +155,15 @@ class UserModel {
 
             // Read User Preferences
             if (!user.preferences || Object.keys(user.preferences).length === 0) {
+                console.log('No preferences set for the user');
                 return {
                     message: 'No preferences set for user',
-                    preferences: {
-                        "categories": [],
-                        "languages": []
-                    },
+                    preferences: [],
                     status: 200
                 }
             }
 
+            console.log("User Preferences:", user.preferences);
             return {
                 message: 'User preferences fetched successfully',
                 preferences: user.preferences,
@@ -163,14 +174,14 @@ class UserModel {
             console.log('Error getting user preferences:', error);
             return {
                 message: 'Internal Server Error',
-                preferences: {},
+                preferences: [],
                 status: 500
             }
         }
     }
 
-    setPreferences(username, preferences) {
-        if (!username || !preferences) {
+    setPreferences(email, preferences) {
+        if (!email || !preferences) {
             return {
                 message: 'Username or Preferences Not Found!',
                 status: 400
@@ -178,9 +189,9 @@ class UserModel {
         }
 
         try {
-            console.log('Updating Preferences for user:', username);
+            console.log('Updating Preferences for user:', email);
             // Get User Details
-            const user = UserModel.findUser(username);
+            const user = UserModel.findUser(email);
             if (!user) {
                 return {
                     message: 'User not found',
@@ -191,7 +202,7 @@ class UserModel {
             // Update User Preferences
             user.preferences = preferences;
             const users = UserModel.readUsers();
-            const updatedUsers = users.map(u => u.username === username ? user : u); // Update that particular user
+            const updatedUsers = users.map(u => u.email === email ? user : u); // Update that particular user
             writeJSONFileSync(userDBPath, updatedUsers);
 
             return {
