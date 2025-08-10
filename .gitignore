@@ -1,2 +1,4 @@
+# Environmeent variables
+.env
 node_modules
 .tap
