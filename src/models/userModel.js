@@ -64,6 +64,7 @@ class UserModel {
             let newUser = {
                 username: userData.username,
                 password: await bcrypt.hash(userData.password, 10), // Hashing the password
+                preferences: {}, // Default Empty Preferences
                 createdAt: new Date().toISOString(),
             }
             writeJSONFileSync(userDBPath, [...users, newUser]);
@@ -118,6 +119,90 @@ class UserModel {
             console.log("Error logging in user: ", error);
             return {
                 message: 'Internal Server Error While Login Process',
+                status: 500
+            }
+        }
+    }
+
+    // Method to Get User Preferences
+    getUserPreferences(username) {
+        try {
+            console.log('Getting Preferences for user:', username);
+            if (!username) {
+                throw new Error('No Username Found!!');
+            }
+
+            // Get User Details
+            const user = UserModel.findUser(username);
+            if (!user) {
+                return {
+                    message: 'User not found',
+                    status: 404
+                }
+            }
+
+            // Read User Preferences
+            if (!user.preferences || Object.keys(user.preferences).length === 0) {
+                return {
+                    message: 'No preferences set for user',
+                    preferences: {
+                        "categories": [],
+                        "languages": []
+                    },
+                    status: 200
+                }
+            }
+
+            return {
+                message: 'User preferences fetched successfully',
+                preferences: user.preferences,
+                status: 200
+            }
+
+        } catch (error) {
+            console.log('Error getting user preferences:', error);
+            return {
+                message: 'Internal Server Error',
+                preferences: {},
+                status: 500
+            }
+        }
+    }
+
+    setPreferences(username, preferences) {
+        if (!username || !preferences) {
+            return {
+                message: 'Username or Preferences Not Found!',
+                status: 400
+            }
+        }
+
+        try {
+            console.log('Updating Preferences for user:', username);
+            // Get User Details
+            const user = UserModel.findUser(username);
+            if (!user) {
+                return {
+                    message: 'User not found',
+                    status: 404
+                }
+            }
+
+            // Update User Preferences
+            user.preferences = preferences;
+            const users = UserModel.readUsers();
+            const updatedUsers = users.map(u => u.username === username ? user : u); // Update that particular user
+            writeJSONFileSync(userDBPath, updatedUsers);
+
+            return {
+                message: 'Preferences updated successfully',
+                preferences: user.preferences,
+                status: 200
+            }
+        } catch (error) {
+            console.log('Error updating user preferences:', error);
+            return {
+                message: 'Internal Server Error',
                 status: 500
             }
         }

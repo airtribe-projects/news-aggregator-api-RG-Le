@@ -8,5 +8,59 @@
     "username": "Denis Lee",
     "password": "$2b$10$iYrgVFSnkLzbD/c0KEQ9zOrimk2StZ/kH6/3751Mfu.pInqiG0YMi",
     "createdAt": "2025-08-09T18:03:11.890Z"
+  },
+  {
+    "username": "Twenty One Pilots",
+    "password": "$2b$10$J4d2lv7Ee2u8UC7XVqT1Du76P35wj6knOTW0Y8P02EFqwGpj4LgUe",
+    "preferences": {
+      "categories": [
+        "sci-fi",
+        "gossips"
+      ],
+      "languages": [
+        "German",
+        "Portugese"
+      ]
+    },
+    "createdAt": "2025-08-10T08:00:14.483Z"
+  },
+  {
+    "username": "GreenDay Tote",
+    "password": "$2b$10$/NM28ApHcVV0RZ9wICZ/remY.n4KPHSUWJ6rPdlpGoye9KtAhZwCC",
+    "preferences": {
+      "categories": [
+        "action",
+        "sci-fi",
+        "tech"
+      ],
+      "languages": [
+        "English",
+        "German",
+        "French"
+      ]
+    },
+    "createdAt": "2025-08-10T08:01:11.259Z"
+  },
+  {
+    "username": "Linkin Park",
+    "password": "$2b$10$xwZAVXSrkHC/29thH5wCSO0itdTYMEat.muRkHGEH/rKs2r5ACYd.",
+    "preferences": {
+      "categories": [
+        "politics",
+        "lifestyle",
+        "tech"
+      ],
+      "languages": [
+        "English",
+        "Hindi"
+      ]
+    },
+    "createdAt": "2025-08-10T10:52:50.072Z"
+  },
+  {
+    "username": "Modi Ji",
+    "password": "$2b$10$qxDcZl45zJWbTcrUrdjk4.dSQlW1epmwtDE9lnGQfXshpCfJ/y9wq",
+    "preferences": {},
+    "createdAt": "2025-08-10T10:59:35.189Z"
   }
 ]
