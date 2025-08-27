@@ -1,7 +1,7 @@
 const User = require("../models/userModel");
 const { fetchNewsByPreferences, fetchTopNews } = require("../utils/newsService");
 
-const newsController = async (req, res) => {
+const fetchNews = async (req, res) => {
     try {
         // Getting the Username
         const email = req.user.email; // set by auth middleware
@@ -34,4 +34,22 @@ const newsController = async (req, res) => {
     }
 }
 
-module.exports = newsController;
+const searchNews = async (req, res) => {
+    try {
+        const query = req.params.query;
+        if (!query) {
+            return res.status(400).json({ success: false, message: 'Search query not found!' });
+        }
+
+        const articles = await fetchNewsByPreferences([query]);
+        if (!articles.length) {
+            return res.status(404).json({ success: false, message: 'No articles found for the given query' });
+        }
+        return res.status(200).json({ success: true, news: articles });
+    } catch (err) {
+        console.log('Error searching news:', err);
+        return res.status(500).json({ success: false, message: 'Internal Server Error' });
+    }
+}
+
+module.exports = { fetchNews, searchNews };

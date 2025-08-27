@@ -16,9 +16,9 @@ const authRoutes = require('./src/routes/authRoutes');
 const userRoutes = require('./src/routes/userRoutes');
 const newsRoutes = require('./src/routes/newsRoutes');
 
-app.use('/users', authRoutes);
-app.use('/users', userRoutes);
-app.use(newsRoutes);
+app.use('/users', authRoutes); // authorization routes
+app.use('/users', userRoutes); // user preferences and other user related routes
+app.use('/news', newsRoutes);
 
 app.get('/', ( _ , res ) => {
     console.log('Welcome to the News Aggregator API');
