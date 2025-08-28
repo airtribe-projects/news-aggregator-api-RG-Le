@@ -27,16 +27,10 @@ const userSchema = new mongoose.Schema({
     },
     read: [
       {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: "Article", // reference to Article model
+        articleId: { type: mongoose.Schema.Types.ObjectId, required: true, ref: 'Article' },
+        isFavorite: { type: Boolean, default: false },
       },
-    ],
-    favorites: [
-      {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: "Article", // reference to Article model
-      },
-    ],
+    ]
 }, { timestamps: true });
 
 module.exports = mongoose.model("User", userSchema, "users");

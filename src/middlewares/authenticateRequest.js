@@ -6,6 +6,7 @@ function authMiddleware(req, res, next) {
         const completetoken = req.headers['authorization'];
         const token = completetoken && completetoken.split(' ')[1]; // Extract token from Bearer scheme
         if (!token) {
+            console.log("No token provided in the request headers");
             return res.status(401).json({ error: 'Invalid Request' });
         }
 
